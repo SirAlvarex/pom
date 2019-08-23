@@ -136,7 +136,7 @@ type {{ .Name }} struct {
 		if len(seqType) > 0 {
 			if strings.HasPrefix(seqType, "xs:") {
 				if len(seqName) > 0 {
-					valueToPrint += fmt.Sprintf(" struct { Comment string `xml:\",comment\"`"+"\n%s []%s `xml:\"%s,omitempty\"` }",
+					valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+"\n%s []*%s `xml:\"%s,omitempty\"` }",
 						strings.Title(seqName),
 						seqType,
 						seqName,
@@ -149,7 +149,7 @@ type {{ .Name }} struct {
 				seqRune := []rune(seqName)
 				seqRune[0] = unicode.ToLower(seqRune[0])
 				seqLower := string(seqRune)
-				valueToPrint += fmt.Sprintf(" struct { Comment string `xml:\",comment\"`"+" \n%s []%s `xml:\"%s,omitempty\"`}",
+				valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+" \n%s []*%s `xml:\"%s,omitempty\"`}",
 					seqType,
 					seqType,
 					seqLower,
@@ -158,13 +158,13 @@ type {{ .Name }} struct {
 		}
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
 			if elem.Name == "properties" {
-				valueToPrint += " XMLAnyElement"
+				valueToPrint += " *XMLAnyElement"
 			} else {
-				valueToPrint += " XMLInner"
+				valueToPrint += " *XMLInner"
 			}
 		}
 		if len(elem.Type) > 0 {
-			valueToPrint += " " + elem.Type
+			valueToPrint += " *" + elem.Type
 		}
 
 		valueToPrint += fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)

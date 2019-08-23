@@ -12,11 +12,20 @@ func TestUnmarshalMarshal(t *testing.T) {
 		t.Error(err)
 	}
 	for index, repo := range pom.Repositories.Repository {
-		repo.Releases.UpdatePolicy = "true"
-		repo.Snapshots.UpdatePolicy = "true"
+		if repo.Releases != nil {
+			value := "true"
+			repo.Releases.UpdatePolicy = &value
+		}
+		if repo.Snapshots != nil {
+			value := "true"
+			repo.Snapshots.UpdatePolicy = &value
+		}
 		pom.Repositories.Repository[index] = repo
 	}
 	rawPom, err := Marshal(pom)
+	if err != nil {
+		t.Error(err)
+	}
 	//a.Equal(examplePom, string(rawPom))
 	fmt.Println(string(rawPom))
 }

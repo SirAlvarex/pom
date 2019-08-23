@@ -4,6 +4,7 @@ package pom
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strings"
 )
 
@@ -16,7 +17,11 @@ func Unmarshal(rawPom []byte) (project, error) {
 var pomProjectHeader = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">`
 
 func Marshal(pom project) ([]byte, error) {
+	fmt.Println(pom)
 	data, err := xml.MarshalIndent(pom, "", "    ")
+	if err != nil {
+		return data, err
+	}
 	data = append([]byte(xml.Header), data...)
 	data = []byte(strings.Replace(string(data), "<project>", pomProjectHeader, 1))
 	return data, err
