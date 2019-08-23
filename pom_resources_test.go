@@ -27,6 +27,7 @@ var examplePom = `<?xml version="1.0" encoding="UTF-8"?>
     </modules>
 
     <properties>
+        <!-- Already provided by tokie-client-dw12 above -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <dropwizard.version>1.3.9</dropwizard.version>

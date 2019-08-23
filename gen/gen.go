@@ -19,6 +19,17 @@ var format = `// Code generated DO NOT EDIT
 // {{ .Timestamp }}
 package pom
 
+type XMLAnyElement struct {
+	Comment  string        ` + "xml:\",comment\"`" + `
+	Elements []XMLAnyElementEntry ` + "xml:\",any\"`" + `
+}
+
+type XMLAnyElementEntry struct {
+	XMLName xml.Name
+	Value   string ` + "xml:\",chardata\"`" + `
+	Comment string ` + "xml:\",comment\"`" + `
+}
+
 // XMLMap is a custom key used to let XML data parse maps
 // Because it doesnt do that by default...for some reason.
 type XMLMap map[string]string
@@ -85,6 +96,7 @@ func main() {
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(2)
 	}
 
 	data := out.Bytes()
@@ -95,13 +107,25 @@ func main() {
 	}
 
 	types := schema.GetTypes()
-	f, _ := os.Create("gen_models.go")
-	t, _ := template.New("tmp").Parse(format)
+	f, err := os.Create("gen_models.go")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
+	t, err := template.New("tmp").Parse(format)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
 	t.Execute(f, struct {
 		Types     []string
 		Timestamp time.Time
 	}{types, time.Now()})
-	res, _ := imports.Process("gen_models.go", nil, nil)
+	res, err := imports.Process("gen_models.go", nil, nil)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
 
 	err = ioutil.WriteFile("gen_models.go", res, 0)
 

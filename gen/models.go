@@ -97,30 +97,6 @@ func (s Schema) FindType(target string) ComplexType {
 	return ComplexType{}
 }
 
-func (s Schema) PrintType(target ComplexType, level ...string) {
-	level = append(level, "-")
-	for _, elem := range target.All.Element {
-		valueToPrint := elem.Name
-		if len(elem.ComplexType.Sequence.Element.Type) > 0 {
-			valueToPrint += " Type: '[]" + elem.ComplexType.Sequence.Element.Type + "'"
-		}
-		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
-			valueToPrint += " Type: '[]xs:string'"
-		}
-		if len(elem.Type) > 0 {
-			valueToPrint += " Type: " + "'" + elem.Type + "'"
-		}
-		if len(elem.Default) > 0 {
-			valueToPrint += " Default: " + "'" + elem.Default + "'"
-		}
-		fmt.Println(strings.Join(level, ""), valueToPrint)
-		elemType := s.FindType(elem.ComplexType.Sequence.Element.Type)
-		s.PrintType(elemType, level...)
-		elemType = s.FindType(elem.Type)
-		s.PrintType(elemType, level...)
-	}
-}
-
 func (s Schema) GetTypes() []string {
 	result := make([]string, 0)
 	for _, sType := range s.ComplexType {
@@ -133,6 +109,13 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 	format := `
 {{ .TypeDoc }}
 type {{ .Name }} struct {
+	{{ if eq .Name "project" }}
+	XMLName        xml.Name
+	Xmlns          string   ` + "`xml:\"xmlns,attr\"`" + `
+	Xsi            string   ` + "`xml:\"xsi,attr\"`" + `
+	SchemaLocation string   ` + "`xml:\"schemaLocation,attr\"`" + `
+	{{end}}
+
 {{ range .Elem }}
     {{ . }}
 {{ end }}
@@ -157,7 +140,7 @@ type {{ .Name }} struct {
 		if len(seqType) > 0 {
 			if strings.HasPrefix(seqType, "xs:") {
 				if len(seqName) > 0 {
-					valueToPrint += fmt.Sprintf(" *struct { %s *[]%s `xml:\"%s,omitempty\"` }",
+					valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+"\n%s *[]%s `xml:\"%s,omitempty\"` }",
 						strings.Title(seqName),
 						seqType,
 						seqName,
@@ -170,7 +153,7 @@ type {{ .Name }} struct {
 				seqRune := []rune(seqType)
 				seqRune[0] = unicode.ToLower(seqRune[0])
 				seqLower := string(seqRune)
-				valueToPrint += fmt.Sprintf(" *struct { %s *[]%s `xml:\"%s,omitempty\"` } ",
+				valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+" \n%s *[]%s `xml:\"%s,omitempty\"`}",
 					seqType,
 					seqType,
 					seqLower,
@@ -178,7 +161,7 @@ type {{ .Name }} struct {
 			}
 		}
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
-			valueToPrint += " *XMLMap"
+			valueToPrint += " *XMLAnyElement"
 		}
 		if len(elem.Type) > 0 {
 			valueToPrint += " *" + elem.Type
