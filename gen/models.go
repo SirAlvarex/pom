@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
-	"unicode"
 )
 
+// Schema is the root element of the POM XSD
 type Schema struct {
 	XMLName            xml.Name      `xml:"schema"`
 	Text               string        `xml:",chardata"`
@@ -20,6 +20,7 @@ type Schema struct {
 	ComplexType        []ComplexType `xml:"complexType"`
 }
 
+// Element is a description of value inside of a type
 type Element struct {
 	Text        string          `xml:",chardata"`
 	Name        string          `xml:"name,attr"`
@@ -31,6 +32,7 @@ type Element struct {
 	ComplexType ElemComplexType `xml:"complexType"`
 }
 
+// SeqElement is the definition of an element inside a sequence
 type SeqElement struct {
 	Text      string `xml:",chardata"`
 	Name      string `xml:"name,attr"`
@@ -39,16 +41,19 @@ type SeqElement struct {
 	Type      string `xml:"type,attr"`
 }
 
+// Annotation contains documentation information
 type Annotation struct {
 	Text          string          `xml:",chardata"`
 	Documentation []Documentation `xml:"documentation"`
 }
 
+// Documentation is...documentation
 type Documentation struct {
 	Text   string `xml:",chardata"`
 	Source string `xml:"source,attr"`
 }
 
+// ComplexType is the unique types declared in the XSD
 type ComplexType struct {
 	Text       string      `xml:",chardata"`
 	Name       string      `xml:"name,attr"`
@@ -58,16 +63,20 @@ type ComplexType struct {
 	Attribute  []Attribute `xml:"attribute"`
 }
 
+// ElemComplexType contains type information if this element is part of a list
 type ElemComplexType struct {
 	Text     string   `xml:",chardata"`
 	Sequence Sequence `xml:"sequence"`
 }
 
+// Sequence described how a sequence is configured
 type Sequence struct {
 	Text    string     `xml:",chardata"`
 	Element SeqElement `xml:"element"`
 	Any     Any        `xml:"any"`
 }
+
+// Attribute is XML attributes
 type Attribute struct {
 	Text       string     `xml:",chardata"`
 	Name       string     `xml:"name,attr"`
@@ -76,6 +85,7 @@ type Attribute struct {
 	Annotation Annotation `xml:"annotation"`
 }
 
+// Any is the generic untyped type of XML
 type Any struct {
 	Text            string `xml:",chardata"`
 	MinOccurs       string `xml:"minOccurs,attr"`
@@ -83,20 +93,13 @@ type Any struct {
 	ProcessContents string `xml:"processContents,attr"`
 }
 
+// All is the list of elements in a type
 type All struct {
 	Text    string    `xml:",chardata"`
 	Element []Element `xml:"element"`
 }
 
-func (s Schema) FindType(target string) ComplexType {
-	for _, complexType := range s.ComplexType {
-		if complexType.Name == target {
-			return complexType
-		}
-	}
-	return ComplexType{}
-}
-
+// GetTypes returns the formatted struct definitions of each type
 func (s Schema) GetTypes() []string {
 	result := make([]string, 0)
 	for _, sType := range s.ComplexType {
@@ -105,96 +108,112 @@ func (s Schema) GetTypes() []string {
 	return result
 }
 
-type Values struct {
-}
-
+// GetTypeAsString applies a type to a struct template
 func (s Schema) GetTypeAsString(target ComplexType) string {
 	format := `
 {{ .TypeDoc }}
 type {{ .Name }} struct {
-{{ range .Elem }}
+{{ range .Fields }}
     {{ . }}
 {{ end }}
 }
 	`
 	typeName := target.Name
+
+	// We want the root object to be a `project`, not a `Model`
 	if typeName == "Model" {
 		typeName = "project"
 	}
+
+	// Format the Type documentation string.
+	// Type declarations must use //, so we remove newlines and smush things together
+	// For the Maven XSD, the first element in a doc is the version of the pom it was added.  So we take just the second element
 	var typeDoc string
 	if len(target.Annotation.Documentation) > 1 {
 		doc := strings.Split(strings.Replace(strings.TrimSpace(target.Annotation.Documentation[1].Text), "\r\n", "\n", -1), "\n")
 		typeDoc = fmt.Sprintf("\n// %s %s ", typeName, strings.Join(doc, "\n//"))
 	}
-	elements := make([]string, 0)
+
+	// fields will be the fields in the struct
+	fields := make([]string, 0)
 	for _, elem := range target.All.Element {
-		valueToPrint := strings.Title(elem.Name)
-		valueToPrint = strings.Replace(valueToPrint, "Url", "URL", -1)
-		valueToPrint = strings.Replace(valueToPrint, "Id", "ID", -1)
+		// Time to clean up the field name
+		field := strings.Title(elem.Name)
+		// GoLint spec
+		field = strings.Replace(field, "Url", "URL", -1)
+		// GoLint spec
+		field = strings.Replace(field, "Id", "ID", -1)
+
+		// Sequence is set if the this type is a list of elements
 		seqType := elem.ComplexType.Sequence.Element.Type
 		seqName := elem.ComplexType.Sequence.Element.Name
 		if len(seqType) > 0 {
-			if strings.HasPrefix(seqType, "xs:") {
-				if len(seqName) > 0 {
-					valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+"\n%s []*%s `xml:\"%s,omitempty\"` }",
-						strings.Title(seqName),
-						seqType,
-						seqName,
-					)
-
-				} else {
-					valueToPrint += " []" + seqType
-				}
-			} else {
-				seqRune := []rune(seqName)
-				seqRune[0] = unicode.ToLower(seqRune[0])
-				seqLower := string(seqRune)
-				valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+" \n%s []*%s `xml:\"%s,omitempty\"`}",
-					seqType,
-					seqType,
-					seqLower,
-				)
-			}
+			// Converting these types to work with XML
+			// <models>
+			//    <model>thing<model>
+			// </models>
+			// For the <model> tag to work, we need to create a subelement struct
+			field += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+"\n%s []*%s `xml:\"%s,omitempty\"` }",
+				strings.Title(seqName),
+				seqType,
+				seqName,
+			)
 		}
+
+		// If MaxOccurs is set, then that means Any is set.
+		// An "Any" element is XMLs type of Generic
+		// XMLInner is the only way we can do generics -- except that means we cannot modify the subxml
+		// XMLAnyElement, however, is like a map[string]string, but ordered
+		// Properties has a consistent map-like format, so we have a special case there
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
 			if elem.Name == "properties" {
-				valueToPrint += " *XMLAnyElement"
+				field += " *XMLAnyElement"
 			} else {
-				valueToPrint += " *XMLInner"
+				field += " *XMLInner"
 			}
 		}
+
+		// If the element itself has a type, set it here.
+		// This value is unset if the type is a sequence, so no conflict with values above
 		if len(elem.Type) > 0 {
-			valueToPrint += " *" + elem.Type
+			field += " *" + elem.Type
 		}
 
-		valueToPrint += fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)
-		valueToPrint = strings.Replace(valueToPrint, "xs:", "", -1)
-		valueToPrint = strings.Replace(valueToPrint, "boolean", "bool", -1)
+		// Adding the XML tags to the end of the field
+		field += fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)
+		// Removing xs:, which is an xml standard type (string, boolean)
+		field = strings.Replace(field, "xs:", "", -1)
+		// Rename boolean to golang type bool
+		field = strings.Replace(field, "boolean", "bool", -1)
+
+		// Format the documentation for the field
+		// For the Maven XSD, the first element in a doc is the version of the pom it was added.  So we take just the second element
 		var documentation string
 		if len(elem.Annotation.Documentation) > 1 {
 			documentation = fmt.Sprintf("\n/* %s %s*/ ", strings.Title(elem.Name), strings.TrimSpace(elem.Annotation.Documentation[1].Text))
 		}
+		// Only add a documentation line if we do in fact have docs
 		if len(documentation) > 0 {
-			valueToPrint = fmt.Sprintf("%s\n%s", documentation, valueToPrint)
+			field = fmt.Sprintf("%s\n%s", documentation, field)
 		}
-		elements = append(elements, valueToPrint)
-		//fmt.Println(strings.Join(level, ""), valueToPrint)
-		//elemType := s.FindType(elem.ComplexType.Sequence.Element.Type)
-		//s.PrintType(elemType, level...)
-		//elemType = s.FindType(elem.Type)
-		//s.PrintType(elemType, level...)
+		fields = append(fields, field)
 	}
-	elements = append(elements, "Comment string `xml:\",comment\"`")
+	// Add a comment field to the bottom of each subtype.  This way we keep comments
+	fields = append(fields, "Comment string `xml:\",comment\"`")
+
+	// Parsing template out to a buffer
 	buff := &bytes.Buffer{}
 	tmpl, _ := template.New("tmp").Parse(format)
 	tmpl.Execute(buff, struct {
 		TypeDoc string
 		Name    string
-		Elem    []string
+		Fields  []string
 	}{
 		typeDoc,
 		typeName,
-		elements,
+		fields,
 	})
+
+	// Return the string representation of this struct definition
 	return buff.String()
 }
