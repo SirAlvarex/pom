@@ -13,11 +13,13 @@ var examplePom = `<?xml version="1.0" encoding="UTF-8"?>
     <description>Messages Service</description>
     <url>http://github.int.yammer.com/yammer/messages</url>
 
+    
+
     <parent>
         <groupId>com.yammer.coreservices</groupId>
         <artifactId>coreservices-parent</artifactId>
-        <version>1.1.0</version>
-    </parent>
+        <version>2019.08.08.173911-merge-0e14c9</version>
+	</parent>
 
     <modules>
         <module>messages-api</module>
@@ -27,10 +29,9 @@ var examplePom = `<?xml version="1.0" encoding="UTF-8"?>
     </modules>
 
     <properties>
-        <!-- Already provided by tokie-client-dw12 above -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <dropwizard.version>1.3.9</dropwizard.version> <!-- BLAH -->
+        <dropwizard.version>1.3.9</dropwizard.version>
         <authentication.version>1.8</authentication.version>
         <jdbi.version>2.62</jdbi.version>
         <spymemcached.version>2.12.3</spymemcached.version>
@@ -215,16 +216,7 @@ var examplePom = `<?xml version="1.0" encoding="UTF-8"?>
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>maven.int.yammer.com</id>
-            <url>http://maven.int.yammer.com/nexus/content/groups/public/</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
+    
 
     <build>
         <plugins>
@@ -272,6 +264,25 @@ var examplePom = `<?xml version="1.0" encoding="UTF-8"?>
         </plugins>
     </build>
 
+
+    <repositories>
+        <repository>
+            <id>dev-azure-com-yammer-yammer-artifacts</id>
+            <url>https://pkgs.dev.azure.com/yammer/_packaging/yammer-artifacts/maven/v1</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <distributionManagement>
+        <repository>
+            <id>dev-azure-com-yammer-yammer-artifacts</id>
+            <url>https://pkgs.dev.azure.com/yammer/_packaging/yammer-artifacts/maven/v1</url>
+        </repository>
+    </distributionManagement>
 </project>
 
 `

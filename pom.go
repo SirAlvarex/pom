@@ -4,26 +4,20 @@ package pom
 
 import (
 	"encoding/xml"
+	"strings"
 )
 
 func Unmarshal(rawPom []byte) (project, error) {
 	pom := project{}
 	err := xml.Unmarshal(rawPom, &pom)
 	return pom, err
-	if err == nil && pom.Properties != nil {
-		for index, prop := range pom.Properties.Elements {
-			pom.Properties.Elements[index] = XMLAnyElementEntry{
-				xml.Name{Local: prop.XMLName.Local},
-				prop.Value,
-				prop.Comment,
-			}
-		}
-	}
-	return pom, err
 }
 
+var pomProjectHeader = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">`
+
 func Marshal(pom project) ([]byte, error) {
-	data, err := xml.MarshalIndent(pom, " ", "    ")
+	data, err := xml.MarshalIndent(pom, "", "    ")
 	data = append([]byte(xml.Header), data...)
+	data = []byte(strings.Replace(string(data), "<project>", pomProjectHeader, 1))
 	return data, err
 }

@@ -105,17 +105,13 @@ func (s Schema) GetTypes() []string {
 	return result
 }
 
+type Values struct {
+}
+
 func (s Schema) GetTypeAsString(target ComplexType) string {
 	format := `
 {{ .TypeDoc }}
 type {{ .Name }} struct {
-	{{ if eq .Name "project" }}
-	XMLName        xml.Name
-	Xmlns          string   ` + "`xml:\"xmlns,attr\"`" + `
-	Xsi            string   ` + "`xml:\"xsi,attr\"`" + `
-	SchemaLocation string   ` + "`xml:\"schemaLocation,attr\"`" + `
-	{{end}}
-
 {{ range .Elem }}
     {{ . }}
 {{ end }}
@@ -140,20 +136,20 @@ type {{ .Name }} struct {
 		if len(seqType) > 0 {
 			if strings.HasPrefix(seqType, "xs:") {
 				if len(seqName) > 0 {
-					valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+"\n%s *[]%s `xml:\"%s,omitempty\"` }",
+					valueToPrint += fmt.Sprintf(" struct { Comment string `xml:\",comment\"`"+"\n%s []%s `xml:\"%s,omitempty\"` }",
 						strings.Title(seqName),
 						seqType,
 						seqName,
 					)
 
 				} else {
-					valueToPrint += " *[]" + seqType
+					valueToPrint += " []" + seqType
 				}
 			} else {
 				seqRune := []rune(seqType)
 				seqRune[0] = unicode.ToLower(seqRune[0])
 				seqLower := string(seqRune)
-				valueToPrint += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+" \n%s *[]%s `xml:\"%s,omitempty\"`}",
+				valueToPrint += fmt.Sprintf(" struct { Comment string `xml:\",comment\"`"+" \n%s []%s `xml:\"%s,omitempty\"`}",
 					seqType,
 					seqType,
 					seqLower,
@@ -161,10 +157,10 @@ type {{ .Name }} struct {
 			}
 		}
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
-			valueToPrint += " *XMLAnyElement"
+			valueToPrint += " XMLAnyElement"
 		}
 		if len(elem.Type) > 0 {
-			valueToPrint += " *" + elem.Type
+			valueToPrint += " " + elem.Type
 		}
 
 		valueToPrint += fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)

@@ -20,14 +20,22 @@ var format = `// Code generated DO NOT EDIT
 package pom
 
 type XMLAnyElement struct {
-	Comment  string        ` + "`xml:\",comment\"`" + `
+	Comment  xml.Comment        ` + "`xml:\",comment\"`" + `
 	Elements []XMLAnyElementEntry ` + "`xml:\",any\"`" + `
 }
 
 type XMLAnyElementEntry struct {
 	XMLName xml.Name
 	Value   string ` + "`xml:\",chardata\"`" + `
-	Comment string ` + "`xml:\",comment\"`" + `
+	Comment xml.Comment ` + "`xml:\",comment\"`" + `
+}
+
+// MarshalXML Remooves the Space field from the XMLName field (Because why does that even exist?)
+func (m XMLAnyElementEntry) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+
+	// Custom marshal is just to get rid of the annoying Space field for XMLName.
+	// Converting to a type without a CustomMarshaler so we don't loop forever.
+	return e.Encode(xmlMapEntry{XMLName: xml.Name{Local: m.XMLName.Local, Space: ""}, Value: m.Value})
 }
 
 // XMLMap is a custom key used to let XML data parse maps
