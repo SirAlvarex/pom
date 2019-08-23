@@ -20,14 +20,14 @@ var format = `// Code generated DO NOT EDIT
 package pom
 
 type XMLAnyElement struct {
-	Comment  string        ` + "xml:\",comment\"`" + `
-	Elements []XMLAnyElementEntry ` + "xml:\",any\"`" + `
+	Comment  string        ` + "`xml:\",comment\"`" + `
+	Elements []XMLAnyElementEntry ` + "`xml:\",any\"`" + `
 }
 
 type XMLAnyElementEntry struct {
 	XMLName xml.Name
-	Value   string ` + "xml:\",chardata\"`" + `
-	Comment string ` + "xml:\",comment\"`" + `
+	Value   string ` + "`xml:\",chardata\"`" + `
+	Comment string ` + "`xml:\",comment\"`" + `
 }
 
 // XMLMap is a custom key used to let XML data parse maps

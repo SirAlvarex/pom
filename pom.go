@@ -9,9 +9,10 @@ import (
 func Unmarshal(rawPom []byte) (project, error) {
 	pom := project{}
 	err := xml.Unmarshal(rawPom, &pom)
+	return pom, err
 	if err == nil && pom.Properties != nil {
 		for index, prop := range pom.Properties.Elements {
-			pom.Properties.Elements[index] = xmlMapEntry{
+			pom.Properties.Elements[index] = XMLAnyElementEntry{
 				xml.Name{Local: prop.XMLName.Local},
 				prop.Value,
 				prop.Comment,
