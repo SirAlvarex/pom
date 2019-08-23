@@ -1,288 +1,208 @@
 package pom
 
-var examplePom = `<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.yammer.messages</groupId>
-    <artifactId>messages-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-
-    <name>messages</name>
-    <description>Messages Service</description>
-    <url>http://github.int.yammer.com/yammer/messages</url>
-
-    
-
-    <parent>
-        <groupId>com.yammer.coreservices</groupId>
-        <artifactId>coreservices-parent</artifactId>
-        <version>2019.08.08.173911-merge-0e14c9</version>
-	</parent>
-
-    <modules>
-        <module>messages-api</module>
-        <module>messages-client</module>
-        <module>messages-service</module>
-        <module>messages-test</module>
-    </modules>
-
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <dropwizard.version>1.3.9</dropwizard.version>
-        <authentication.version>1.8</authentication.version>
-        <jdbi.version>2.62</jdbi.version>
-        <spymemcached.version>2.12.3</spymemcached.version>
-        <msgpack.version>0.7.0-p7</msgpack.version>
-        <tenacity.version>2019.08.02.203403-57827c</tenacity.version>
-        <tokie.version>2019.05.06.213757-791ace</tokie.version>
-        <yammer.privileges.version>0.0.7</yammer.privileges.version>
-        <dropwizard-logstash-appender.version>2018.10.19.014724-550e8a</dropwizard-logstash-appender.version>
-        <directory.version>2019.03.19.174313-f204f5</directory.version>
-        <metrics.reporter.version>0.2.0</metrics.reporter.version>
-        <wiremock.version>2.8.0</wiremock.version>
-        <contentstatelib.version>2019.08.21.181013-70feb6</contentstatelib.version>
-        <failsafe.version>1.1.0</failsafe.version>
-        <h2.version>1.4.199</h2.version>
-        <coreservices.common.dropwizard.version>2019.07.16.172749-9dc287</coreservices.common.dropwizard.version>
-        <error_prone.version>2.3.1</error_prone.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.dropwizard</groupId>
-                <artifactId>dropwizard-bom</artifactId>
-                <version>${dropwizard.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.tenacity</groupId>
-                <artifactId>tenacity-bom</artifactId>
-                <version>${tenacity.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_annotations</artifactId>
-                <version>${error_prone.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.jodah</groupId>
-                <artifactId>failsafe</artifactId>
-                <version>${failsafe.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.contentstate</groupId>
-                <artifactId>contentstate-util</artifactId>
-                <version>${contentstatelib.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.tomakehurst</groupId>
-                <artifactId>wiremock</artifactId>
-                <version>${wiremock.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.yammer-privileges</groupId>
-                <artifactId>yammer-privileges-messages</artifactId>
-                <version>${yammer.privileges.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.spy</groupId>
-                <artifactId>spymemcached</artifactId>
-                <version>${spymemcached.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.coreservices</groupId>
-                <artifactId>coreservices-common-dropwizard</artifactId>
-                <version>${coreservices.common.dropwizard.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.metrics.reporters</groupId>
-                <artifactId>chute-graphite-reporter</artifactId>
-                <version>${metrics.reporter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.tokie</groupId>
-                <artifactId>tokie-client-dw12</artifactId>
-                <version>${tokie.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.tokie</groupId>
-                <artifactId>tokie-authenticator-dw12</artifactId>
-                <version>${tokie.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.tokie</groupId>
-                <artifactId>tokie-test-rule</artifactId>
-                <version>${tokie.version}</version>
-                <exclusions>
-                    <!-- Already provided by tokie-client-dw12 above -->
-                    <exclusion>
-                        <groupId>com.yammer.tokie</groupId>
-                        <artifactId>tokie-client-dw10</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.authentication</groupId>
-                <artifactId>authentication-dropwizard-dw11</artifactId>
-                <version>${authentication.version}</version>
-                <exclusions>
-                    <!-- Already provided by tokie-client-dw12 above -->
-                    <exclusion>
-                        <groupId>com.yammer.tokie</groupId>
-                        <artifactId>tokie-client-dw11</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.yammer.tokie</groupId>
-                        <artifactId>tokie-authenticator-dw11</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.directory</groupId>
-                <artifactId>directory-client</artifactId>
-                <version>${directory.version}</version>
-                <exclusions>
-                    <!-- Already provided by authentication-dropwizard-dw11 above -->
-                    <exclusion>
-                        <groupId>com.yammer.authentication</groupId>
-                        <artifactId>authentication-api-dw10</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.msgpack</groupId>
-                <artifactId>msgpack-core</artifactId>
-                <version>${msgpack.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.msgpack</groupId>
-                <artifactId>jackson-dataformat-msgpack</artifactId>
-                <version>${msgpack.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer</groupId>
-                <artifactId>dropwizard-logstash-appender</artifactId>
-                <version>${dropwizard-logstash-appender.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.postgresql</groupId>
-                <artifactId>postgresql</artifactId>
-                <version>9.3-1102-jdbc41</version>
-            </dependency>
-            <!-- Required to use JDBI @UseStringTemplate3StatementLocator. Fixed in JDBI3 -->
-            <dependency>
-                <groupId>org.antlr</groupId>
-                <artifactId>stringtemplate</artifactId>
-                <version>3.2.1</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-testing</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <version>${wiremock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Hamcrest is super old. We should upgrade to AssertJ -->
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    
-
+var examplePom = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <artifactId>msods-sync-client</artifactId>
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Xlint</arg>
+                        <arg>-XDignore.symbol.file</arg>
+                    </compilerArgs>
+                    <encoding>UTF-8</encoding>
+                    <fork>true</fork>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <version>3.1</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M2</version>
-                <executions>
-                    <execution>
-                        <id>enforce</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <DependencyConvergence />
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <id>attach-sources</id>
                     </execution>
                 </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <version>2.2.1</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <version>2.4.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <version>2.6</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <version>2.16</version>
+            </plugin>
+            <plugin>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <configuration>
+                    <effort>Max</effort>
+                    <excludeFilterFile>${basedir}/findbugs-exclude.xml</excludeFilterFile>
+                    <includeTests>true</includeTests>
+                    <threshold>Low</threshold>
+                    <xmlOutput>true</xmlOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <groupId>org.codehaus.mojo</groupId>
+                <version>3.0.1</version>
+            </plugin>
+            <plugin>
+                <!-- Run this plugin after copying over new schema files. NOTE: they require hand-editing
+                 for this plugin to succeed. See the README.md of this repo for the wiki on how to do that. -->
+                <artifactId>cxf-codegen-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <defaultOptions>
+                                <bindingFiles>
+                                    <!-- These come from the MSODS team -->
+                                    <bindingFile>${wsdl.dir}/DirectoryChange.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/DirectorySync.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/DirectorySync2.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/DirectorySyncMetadata.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/Serialization.Arrays.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/Serialization.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/ServiceInstanceMove.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/System.xsd</bindingFile>
+                                    <bindingFile>${wsdl.dir}/Annotations.xsd</bindingFile>
+                                    <!-- This is from the O365 team -->
+                                    <bindingFile>${wsdl.dir}/ExtensibilitySchema.xsd</bindingFile>
+                                </bindingFiles>
+                                <extraargs>
+                                    <extraarg>-xjc-npa</extraarg>
+                                </extraargs>
+                            </defaultOptions>
+                            <sourceRoot>${basedir}/target/generated-sources/wsimport</sourceRoot>
+                            <wsdlOptions>
+                                <wsdlOPtion>
+                                    <wsdl>${basedir}/src/main/resources/wsdl-modified/ServiceInstanceMove.wsdl</wsdl>
+                                    <wsdlLocation>classpath:wsdl-modified/ServiceInstanceMove.wsdl</wsdlLocation>
+                                </wsdlOPtion>
+                                <wsdlOPtion>
+                                    <wsdl>${basedir}/src/main/resources/wsdl-modified/FederatedServiceOnboarding.wsdl</wsdl>
+                                    <wsdlLocation>classpath:wsdl-modified/FederatedServiceOnboarding.wsdl</wsdlLocation>
+                                </wsdlOPtion>
+                                <wsdlOption>
+                                    <wsdl>${basedir}/src/main/resources/wsdl-modified/DirectorySync.wsdl</wsdl>
+                                    <wsdlLocation>classpath:wsdl-modified/DirectorySync.wsdl</wsdlLocation>
+                                </wsdlOption>
+                            </wsdlOptions>
+                        </configuration>
+                        <goals>
+                            <goal>wsdl2java</goal>
+                        </goals>
+                        <id>generate-sources</id>
+                        <phase>generate-sources</phase>
+                    </execution>
+                </executions>
+                <groupId>org.apache.cxf</groupId>
+                <version>3.2.6</version>
             </plugin>
         </plugins>
     </build>
-
-
-    <repositories>
+    <dependencies>
+        <dependency>
+            <artifactId>slf4j-api</artifactId>
+            <groupId>org.slf4j</groupId>
+            <scope>provided</scope>
+            <version>[1.7.6]</version>
+        </dependency>
+        <dependency>
+            <artifactId>commons-codec</artifactId>
+            <groupId>commons-codec</groupId>
+            <scope>test</scope>
+            <version>[1.8]</version>
+        </dependency>
+        <dependency>
+            <artifactId>junit</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hamcrest-core</artifactId>
+                    <groupId>org.hamcrest</groupId>
+                </exclusion>
+            </exclusions>
+            <groupId>junit</groupId>
+            <scope>test</scope>
+            <version>[4.11]</version>
+        </dependency>
+        <dependency>
+            <artifactId>mockito-all</artifactId>
+            <groupId>org.mockito</groupId>
+            <scope>test</scope>
+            <version>[1.9.5]</version>
+        </dependency>
+        <dependency>
+            <artifactId>assertj-core</artifactId>
+            <groupId>org.assertj</groupId>
+            <scope>test</scope>
+            <version>[1.3.0]</version>
+        </dependency>
+    </dependencies>
+    <distributionManagement>
         <repository>
             <id>dev-azure-com-yammer-yammer-artifacts</id>
-            <url>https://pkgs.dev.azure.com/yammer/_packaging/yammer-artifacts/maven/v1</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
-    </repositories>
-    <distributionManagement>
-        <repository>
-            <id>dev-azure-com-yammer-yammer-artifacts</id>
             <url>https://pkgs.dev.azure.com/yammer/_packaging/yammer-artifacts/maven/v1</url>
         </repository>
     </distributionManagement>
-</project>
-
-`
+    <groupId>com.microsoft.msods</groupId>
+    <modelVersion>4.0.0</modelVersion>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven.int.yammer.com</id>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <url>http://maven.int.yammer.com/nexus/content/groups/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <properties>
+        <wsdl.dir>${project.basedir}/src/main/resources/${wsdl.dir.name}</wsdl.dir>
+        <wsdl.dir.name>wsdl-modified</wsdl.dir.name>
+    </properties>
+    <repositories>
+        <repository>
+            <id>dev-azure-com-yammer-yammer-artifacts</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>https://pkgs.dev.azure.com/yammer/_packaging/yammer-artifacts/maven/v1</url>
+        </repository>
+    </repositories>
+    <scm>
+        <connection>scm:git:git://github.int.yammer.com/yammer/msods-sync-client.git</connection>
+        <developerConnection>scm:git:git@github.int.yammer.com:yammer/msods-sync-client.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.int.yammer.com/yammer/msods-sync-client</url>
+    </scm>
+    <version>0.4.22-SNAPSHOT</version>
+</project>`

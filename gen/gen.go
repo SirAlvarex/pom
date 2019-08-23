@@ -19,6 +19,11 @@ var format = `// Code generated DO NOT EDIT
 // {{ .Timestamp }}
 package pom
 
+
+type XMLInner struct {
+	InnerXML string ` + "`xml:\",innerxml\"`" + `
+}
+
 type XMLAnyElement struct {
 	Comment  xml.Comment        ` + "`xml:\",comment\"`" + `
 	Elements []XMLAnyElementEntry ` + "`xml:\",any\"`" + `

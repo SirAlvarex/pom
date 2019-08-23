@@ -146,7 +146,7 @@ type {{ .Name }} struct {
 					valueToPrint += " []" + seqType
 				}
 			} else {
-				seqRune := []rune(seqType)
+				seqRune := []rune(seqName)
 				seqRune[0] = unicode.ToLower(seqRune[0])
 				seqLower := string(seqRune)
 				valueToPrint += fmt.Sprintf(" struct { Comment string `xml:\",comment\"`"+" \n%s []%s `xml:\"%s,omitempty\"`}",
@@ -157,7 +157,11 @@ type {{ .Name }} struct {
 			}
 		}
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
-			valueToPrint += " XMLAnyElement"
+			if elem.Name == "properties" {
+				valueToPrint += " XMLAnyElement"
+			} else {
+				valueToPrint += " XMLInner"
+			}
 		}
 		if len(elem.Type) > 0 {
 			valueToPrint += " " + elem.Type
