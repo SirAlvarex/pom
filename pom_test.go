@@ -21,6 +21,7 @@ func TestUpdatedFieldPersists(t *testing.T) {
 	a.NoError(err, "Error unmarshalling test data")
 	name := "Test"
 	pom.Name = &name
+	pom.GetRepositories()
 	rawPom, err := Marshal(pom)
 	a.NoError(err, "Error marshalling test data")
 	a.NotEmpty(rawPom, "Pom was empty")

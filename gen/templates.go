@@ -2,13 +2,44 @@ package main
 
 import "text/template"
 
-var structFormat = template.Must(template.New("parent").Parse(`
+var structFormat = template.Must(template.New("struct").Parse(`
 {{ .TypeDoc }}
 type {{ .Name }} struct {
 {{ range .Fields }}
     {{ . }}
 {{ end }}
 }
+`))
+
+var structFormatv2 = template.Must(template.New("structv2").Parse(`
+{{ range . }}
+{{ .Doc }}
+type {{ .Name }} struct {
+{{ $parentName := .Name }}
+{{ range .Fields }}
+    {{ .Doc }}
+    {{ .Name }} {{ if .IsSlice}}[]{{end}}{{if .IsPointer}}*{{end}}{{ .Type }} {{ .Tag }}
+{{ end }}
+}
+
+{{ range .Fields }}
+func (a *{{ $parentName }}) Get{{ .Name }}() {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }} {
+    {{- if .IsSlice }}
+    if a.{{ .Name }} != nil {
+        return a.{{ .Name }}
+    }
+    return  []{{if .IsPointer}}*{{end}}{{ .DefaultValue }}
+    {{- else if .IsPointer }}
+    if a.{{ .Name }} != nil {
+        return *a.{{ .Name }}
+    }
+    return  {{ .DefaultValue }}
+    {{- else }}
+    return a.{{ .Name }}
+    {{- end }}
+}
+{{ end }}
+{{ end }}
 `))
 
 var modelFormat = template.Must(template.New("parent").Parse(`// Code generated DO NOT EDIT
