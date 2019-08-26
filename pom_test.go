@@ -1,31 +1,31 @@
 package pom
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshalMarshal(t *testing.T) {
-	//a := assert.New(t)
+	a := assert.New(t)
 	pom, err := Unmarshal([]byte(examplePom))
-	if err != nil {
-		t.Error(err)
-	}
-	for index, repo := range pom.Repositories.Repository {
-		if repo.Releases != nil {
-			value := "true"
-			repo.Releases.UpdatePolicy = &value
-		}
-		if repo.Snapshots != nil {
-			value := "true"
-			repo.Snapshots.UpdatePolicy = &value
-		}
-		pom.Repositories.Repository[index] = repo
-	}
+	a.NoError(err, "Error unmarshalling test data")
 	rawPom, err := Marshal(pom)
-	if err != nil {
-		t.Error(err)
-	}
-	//a.Equal(examplePom, string(rawPom))
-	fmt.Println(string(rawPom))
+	a.NoError(err, "Error marshalling test data")
+	a.NotEmpty(rawPom, "Pom was empty")
+}
+
+func TestUpdatedFieldPersists(t *testing.T) {
+	a := assert.New(t)
+	pom, err := Unmarshal([]byte(examplePom))
+	a.NoError(err, "Error unmarshalling test data")
+	name := "Test"
+	pom.Name = &name
+	rawPom, err := Marshal(pom)
+	a.NoError(err, "Error marshalling test data")
+	a.NotEmpty(rawPom, "Pom was empty")
+	pom, err = Unmarshal([]byte(rawPom))
+	a.NoError(err, "Error unmarshalling test data")
+	a.NotNil(pom.Name, "Pom Name was not persisted")
+	a.Equal(name, *pom.Name, "Name was not %s when we remarshaled", name)
 }

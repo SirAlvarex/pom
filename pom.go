@@ -1,10 +1,9 @@
 package pom
 
-//go:generate go run gen/gen.go gen/models.go
+//go:generate go run gen/gen.go gen/models.go gen/templates.go
 
 import (
 	"encoding/xml"
-	"fmt"
 	"strings"
 )
 
@@ -17,7 +16,6 @@ func Unmarshal(rawPom []byte) (project, error) {
 var pomProjectHeader = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">`
 
 func Marshal(pom project) ([]byte, error) {
-	fmt.Println(pom)
 	data, err := xml.MarshalIndent(pom, "", "    ")
 	if err != nil {
 		return data, err
