@@ -23,19 +23,26 @@ type {{ .Name }} struct {
 }
 
 {{ range .Fields }}
-func (a *{{ $parentName }}) Get{{ .Name }}() {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }} {
+// Get{{.Name }} Gets the value of {{ .Name }} and returns it.
+// If the value does not exist, then the default empty value is returned
+// and exists is set to false
+// Usage: 
+//   if value, ok := a.Get{{ .Name }}(); ok { 
+//        fmt.Println(value)
+//    }
+func (a *{{ $parentName }}) Get{{ .Name }}() (returnValue {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }}, exists bool) {
     {{- if .IsSlice }}
     if a.{{ .Name }} != nil {
-        return a.{{ .Name }}
+        return a.{{ .Name }}, true
     }
-    return  []{{if .IsPointer}}*{{end}}{{ .DefaultValue }}
+    return  []{{if .IsPointer}}*{{end}}{{ .DefaultValue }}, false
     {{- else if .IsPointer }}
     if a.{{ .Name }} != nil {
-        return *a.{{ .Name }}
+        return *a.{{ .Name }}, true
     }
-    return  {{ .DefaultValue }}
+    return  {{ .DefaultValue }}, false
     {{- else }}
-    return a.{{ .Name }}
+    return a.{{ .Name }}, false
     {{- end }}
 }
 {{ end }}
