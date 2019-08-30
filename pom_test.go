@@ -13,6 +13,7 @@ func TestUnmarshalMarshal(t *testing.T) {
 	rawPom, err := Marshal(pom)
 	a.NoError(err, "Error marshalling test data")
 	a.NotEmpty(rawPom, "Pom was empty")
+	a.Equal(reMarshaledPom, string(rawPom), "Remarshaled pom is not correct")
 }
 
 func TestUpdatedFieldPersists(t *testing.T) {

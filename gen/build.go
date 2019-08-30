@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 var existingTypes = make(map[string]bool, 0)
@@ -25,6 +26,7 @@ type pomType struct {
 
 type pomTypeField struct {
 	Name         string
+	PrivateName  string
 	Doc          string
 	Tag          string
 	Type         string
@@ -66,7 +68,11 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 		field = strings.Replace(field, "Url", "URL", -1)
 		// GoLint spec
 		field = strings.Replace(field, "Id", "ID", -1)
+		fieldRune := []rune(field)
+		fieldRune[0] = unicode.ToLower(fieldRune[0])
+		fieldLower := string(fieldRune)
 		abc.Name = field
+		abc.PrivateName = fieldLower
 		// Sequence is set if the this type is a list of elements
 		seqType := elem.ComplexType.Sequence.Element.Type
 		seqName := elem.ComplexType.Sequence.Element.Name
@@ -80,19 +86,24 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 			if ok := existingTypes[subTypeName]; !ok {
 				subTypeType := strings.Replace(strings.Replace(seqType, "xs:", "", -1), "boolean", "bool", -1)
 				subTypeDefault := fmt.Sprintf("%s{}", subTypeType)
+				seqRune := []rune(seqName)
+				seqRune[0] = unicode.ToLower(seqRune[0])
+				seqLower := string(seqRune)
 				subType := pomType{
 					Name: subTypeName,
-					Doc:  "// Sequence Type",
+					Doc:  fmt.Sprintf("// %s contains the subelements for iterables in XML", subTypeName),
 					Fields: []pomTypeField{
 						pomTypeField{
-							Name:      "Comment",
-							Type:      "string",
-							IsPointer: false,
-							IsSlice:   false,
-							Tag:       "`xml:\",comment\"`",
+							Name:        "Comment",
+							PrivateName: "comment",
+							Type:        "string",
+							IsPointer:   false,
+							IsSlice:     false,
+							Tag:         "`xml:\",comment\"`",
 						},
 						pomTypeField{
 							Name:         strings.Title(seqName),
+							PrivateName:  seqLower,
 							Type:         subTypeType,
 							Tag:          fmt.Sprintf("`xml:\"%s,omitempty\"`", seqName),
 							IsPointer:    true,
@@ -112,12 +123,12 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 		// If MaxOccurs is set, then that means Any is set.
 		// An "Any" element is XMLs type of Generic
 		// XMLInner is the only way we can do generics -- except that means we cannot modify the subxml
-		// XMLAnyElement, however, is like a map[string]string, but ordered
+		// XMLProperties, however, is like a map[string]string, but ordered
 		// Properties has a consistent map-like format, so we have a special case there
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
 			if elem.Name == "properties" {
-				abc.Type = "XMLAnyElement"
-				abc.DefaultValue = "XMLAnyElement{}"
+				abc.Type = "XMLProperties"
+				abc.DefaultValue = "XMLProperties{}"
 				abc.IsPointer = true
 			} else {
 				abc.Type = "XMLInner"

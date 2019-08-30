@@ -1,6 +1,6 @@
 package pom
 
-//go:generate go run gen/gen.go gen/models.go gen/templates.go gen/build.go
+//go:generate go run gen/main.go gen/models.go gen/templates.go gen/build.go
 
 import (
 	"encoding/xml"
