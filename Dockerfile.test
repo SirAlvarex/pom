@@ -1,0 +1,9 @@
+FROM golang:1.12
+RUN mkdir -p /go/src/yamgo.io/golang/pom /out
+RUN go get -u github.com/jstemmer/go-junit-report \
+              github.com/stretchr/testify/assert
+ADD . /go/src/yamgo.io/golang/pom
+WORKDIR  /go/src/yamgo.io/golang/pom
+
+CMD go test -v ./... | go-junit-report
+

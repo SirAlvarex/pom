@@ -1,0 +1,17 @@
+resources:
+- repo: self
+queue:
+  name: build-agents
+
+steps:
+- bash: |
+    #!/bin/bash -e
+    docker build -f Dockerfile.test -t $(Build.BuildId) .
+    docker run --rm $(Build.BuildId) > report.xml
+    docker rmi -f $(Build.BuildId)
+
+- task: PublishTestResults@2
+  condition: always()
+  inputs:
+    testResultsFiles: '**/report.xml'
+    failTaskOnFailedTests: true

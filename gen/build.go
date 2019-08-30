@@ -37,11 +37,6 @@ type pomTypeField struct {
 func (s Schema) GetTypeAsString(target ComplexType) string {
 	typeName := target.Name
 
-	// We want the root object to be a `project`, not a `Model`
-	if typeName == "Model" {
-		typeName = "project"
-	}
-
 	// Format the Type documentation string.
 	// Type declarations must use //, so we remove newlines and smush things together
 	// For the Maven XSD, the first element in a doc is the version of the pom it was added.  So we take just the second element

@@ -7,16 +7,19 @@ import (
 	"strings"
 )
 
-func Unmarshal(rawPom []byte) (project, error) {
-	pom := project{}
-	err := xml.Unmarshal(rawPom, &pom)
-	return pom, err
-}
-
 var pomProjectHeader = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">`
 
-func Marshal(pom project) ([]byte, error) {
-	data, err := xml.MarshalIndent(pom, "", "    ")
+// Unmarshal takes in the raw data of a POM, and returns a project in the form of a Model
+func Unmarshal(rawPom []byte) (Model, error) {
+	pom := project{}
+	err := xml.Unmarshal(rawPom, &pom)
+	return pom.Model, err
+}
+
+// Marshal turns a POM project into the raw bytes of a pom, ready for export
+func Marshal(pom Model) ([]byte, error) {
+	p := project{pom}
+	data, err := xml.MarshalIndent(p, "", "    ")
 	if err != nil {
 		return data, err
 	}
