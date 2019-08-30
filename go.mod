@@ -1,4 +1,4 @@
-module yamgo.io/golang/pom
+module github.com/SirAlvarex/pom
 
 go 1.12
 
