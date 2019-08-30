@@ -5,16 +5,7 @@ import (
 	"text/template"
 )
 
-var structFormat = template.Must(template.New("struct").Parse(`
-{{ .TypeDoc }}
-type {{ .Name }} struct {
-{{ range .Fields }}
-    {{ . }}
-{{ end }}
-}
-`))
-
-var structFormatv2 = template.Must(template.New("structv2").Funcs(template.FuncMap{
+var structFormat = template.Must(template.New("structv2").Funcs(template.FuncMap{
 	"dict": func(values ...interface{}) (map[string]interface{}, error) {
 		if len(values)%2 != 0 {
 			return nil, errors.New("invalid dict call")
@@ -51,7 +42,7 @@ type {{ .Name }} struct {
 `))
 
 // Define how get methods are templatized
-var getMethod = template.Must(structFormatv2.New("getMethod").Parse(`
+var getMethod = template.Must(structFormat.New("getMethod").Parse(`
 {{ with .Field }}
 // Get{{.Name }} Gets the value of {{ .Name }} and returns it.
 // If the value does not exist, then the default empty value is returned
@@ -83,7 +74,7 @@ func (a *{{ $.ParentName }}) Get{{ .Name }}() (returnValue {{ if .IsSlice}}[]{{i
 `))
 
 // Define how get methods are templatized
-var setMethod = template.Must(structFormatv2.New("setMethod").Parse(`
+var setMethod = template.Must(structFormat.New("setMethod").Parse(`
 {{ with .Field }}
 // Set{{.Name }} will overwrite whatever value is currently set for {{ .Name }}.
 // Usage: 
@@ -100,7 +91,7 @@ func (a *{{ $.ParentName }}) Set{{ .Name }}(value {{ if .IsSlice}}[]{{if .IsPoin
 `))
 
 // Define how get methods are templatized
-var updateMethod = template.Must(structFormatv2.New("updateMethod").Parse(`
+var updateMethod = template.Must(structFormat.New("updateMethod").Parse(`
 {{ with .Field }}
 // Update{{.Name }} will update a sequence at index.  If indx is greater than the
 // length of the sequence, we add it to the end.
