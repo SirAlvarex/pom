@@ -1,7 +1,10 @@
 FROM golang:1.12
-RUN go get -u 
 RUN go get -u github.com/jstemmer/go-junit-report \
               github.com/stretchr/testify/assert
 
+WORKDIR /project
+
+ADD . /project
+RUN go get -u 
 CMD go test -v ./... | go-junit-report
 
