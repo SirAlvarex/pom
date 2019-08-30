@@ -1,6 +1,9 @@
 package main
 
-import "text/template"
+import (
+	"errors"
+	"text/template"
+)
 
 var structFormat = template.Must(template.New("struct").Parse(`
 {{ .TypeDoc }}
@@ -11,7 +14,22 @@ type {{ .Name }} struct {
 }
 `))
 
-var structFormatv2 = template.Must(template.New("structv2").Parse(`
+var structFormatv2 = template.Must(template.New("structv2").Funcs(template.FuncMap{
+	"dict": func(values ...interface{}) (map[string]interface{}, error) {
+		if len(values)%2 != 0 {
+			return nil, errors.New("invalid dict call")
+		}
+		dict := make(map[string]interface{}, len(values)/2)
+		for i := 0; i < len(values); i += 2 {
+			key, ok := values[i].(string)
+			if !ok {
+				return nil, errors.New("dict keys must be strings")
+			}
+			dict[key] = values[i+1]
+		}
+		return dict, nil
+	},
+}).Parse(`
 {{ range . }}
 {{ .Doc }}
 type {{ .Name }} struct {
@@ -23,6 +41,18 @@ type {{ .Name }} struct {
 }
 
 {{ range .Fields }}
+{{ template "getMethod" dict "ParentName" $parentName "Field" . }}
+{{ template "setMethod" dict "ParentName" $parentName "Field" . }}
+{{ if .IsSlice }}
+{{ template "updateMethod" dict "ParentName" $parentName "Field" . }}
+{{ end }}
+{{ end }}
+{{ end }}
+`))
+
+// Define how get methods are templatized
+var getMethod = template.Must(structFormatv2.New("getMethod").Parse(`
+{{ with .Field }}
 // Get{{.Name }} Gets the value of {{ .Name }} and returns it.
 // If the value does not exist, then the default empty value is returned
 // and exists is set to false
@@ -30,12 +60,16 @@ type {{ .Name }} struct {
 //   if value, ok := a.Get{{ .Name }}(); ok { 
 //        fmt.Println(value)
 //    }
-func (a *{{ $parentName }}) Get{{ .Name }}() (returnValue {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }}, exists bool) {
+{{- if .IsSlice }}
+func (a *{{ $.ParentName }}) Get{{ .Name }}() (returnValue {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }}) {
+{{- else }}
+func (a *{{ $.ParentName }}) Get{{ .Name }}() (returnValue {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }}, exists bool) {
+{{- end }}
     {{- if .IsSlice }}
     if a.{{ .Name }} != nil {
-        return a.{{ .Name }}, true
+        return a.{{ .Name }}
     }
-    return  []{{if .IsPointer}}*{{end}}{{ .DefaultValue }}, false
+    return  []{{if .IsPointer}}*{{end}}{{ .DefaultValue }}
     {{- else if .IsPointer }}
     if a.{{ .Name }} != nil {
         return *a.{{ .Name }}, true
@@ -46,6 +80,56 @@ func (a *{{ $parentName }}) Get{{ .Name }}() (returnValue {{ if .IsSlice}}[]{{if
     {{- end }}
 }
 {{ end }}
+`))
+
+// Define how get methods are templatized
+var setMethod = template.Must(structFormatv2.New("setMethod").Parse(`
+{{ with .Field }}
+// Set{{.Name }} Gets the value of {{ .Name }} and returns it.
+// If the value does not exist, then the default empty value is returned
+// and exists is set to false
+// Usage: 
+//   if value, ok := a.Get{{ .Name }}(); ok { 
+//        fmt.Println(value)
+//    }
+func (a *{{ $.ParentName }}) Set{{ .Name }}(value {{ if .IsSlice}}[]{{if .IsPointer}}*{{end}}{{end}}{{ .Type }})  {
+    {{- if or .IsSlice (not .IsPointer ) }}
+    a.{{ .Name }} = value
+    {{ else }}
+    copy := value
+    a.{{ .Name }} = &copy
+    {{ end }}
+}
+{{ end }}
+`))
+
+// Define how get methods are templatized
+var updateMethod = template.Must(structFormatv2.New("updateMethod").Parse(`
+{{ with .Field }}
+// Update{{.Name }} Gets the value of {{ .Name }} and returns it.
+// If the value does not exist, then the default empty value is returned
+// and exists is set to false
+// Usage: 
+//   if value, ok := a.Get{{ .Name }}(); ok { 
+//        fmt.Println(value)
+//    }
+func (a *{{ $.ParentName }}) Update{{ .Name }}(value {{if .IsPointer}}*{{end}}{{ .Type }}, index int) {
+    current := a.Get{{.Name}}()
+    if len(current) > index {
+        a.{{ .Name }}[index] = value
+    }
+    a.{{ .Name }} = append(current, value)
+}
+// Add{{.Name }} Gets the value of {{ .Name }} and returns it.
+// If the value does not exist, then the default empty value is returned
+// and exists is set to false
+// Usage: 
+//   if value, ok := a.Get{{ .Name }}(); ok { 
+//        fmt.Println(value)
+//    }
+func (a *{{ $.ParentName }}) Add{{ .Name }}(value {{if .IsPointer}}*{{end}}{{ .Type }}) {
+    a.{{ .Name }} = append(a.{{ .Name }}, value)
+}
 {{ end }}
 `))
 

@@ -57,7 +57,6 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 		Doc:  typeDoc,
 	}
 	// fields will be the fields in the struct
-	fields := make([]string, 0)
 	myType.Fields = make([]pomTypeField, 0)
 	for _, elem := range target.All.Element {
 		abc := pomTypeField{}
@@ -77,11 +76,6 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 			//    <model>thing<model>
 			// </models>
 			// For the <model> tag to work, we need to create a subelement struct
-			field += fmt.Sprintf(" *struct { Comment string `xml:\",comment\"`"+"\n%s []*%s `xml:\"%s,omitempty\"` }",
-				strings.Title(seqName),
-				seqType,
-				seqName,
-			)
 			subTypeName := fmt.Sprintf("Sequence%s", strings.Title(seqName))
 			if ok := existingTypes[subTypeName]; !ok {
 				subTypeType := strings.Replace(strings.Replace(seqType, "xs:", "", -1), "boolean", "bool", -1)
@@ -91,9 +85,11 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 					Doc:  "// Sequence Type",
 					Fields: []pomTypeField{
 						pomTypeField{
-							Name: "Comment",
-							Type: "string",
-							Tag:  "`xml:\",comment\"`",
+							Name:      "Comment",
+							Type:      "string",
+							IsPointer: false,
+							IsSlice:   false,
+							Tag:       "`xml:\",comment\"`",
 						},
 						pomTypeField{
 							Name:         strings.Title(seqName),
@@ -120,12 +116,10 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 		// Properties has a consistent map-like format, so we have a special case there
 		if len(elem.ComplexType.Sequence.Any.MaxOccurs) > 0 {
 			if elem.Name == "properties" {
-				field += " *XMLAnyElement"
 				abc.Type = "XMLAnyElement"
 				abc.DefaultValue = "XMLAnyElement{}"
 				abc.IsPointer = true
 			} else {
-				field += " *XMLInner"
 				abc.Type = "XMLInner"
 				abc.DefaultValue = "XMLInner{}"
 				abc.IsPointer = true
@@ -135,7 +129,6 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 		// If the element itself has a type, set it here.
 		// This value is unset if the type is a sequence, so no conflict with values above
 		if len(elem.Type) > 0 {
-			field += " *" + elem.Type
 			abc.IsPointer = true
 			abc.Type = strings.Replace(strings.Replace(elem.Type, "xs:", "", -1), "boolean", "bool", -1)
 			abc.DefaultValue = fmt.Sprintf("%s{}", abc.Type)
@@ -146,13 +139,8 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 			}
 		}
 
-		abc.Tag = fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)
 		// Adding the XML tags to the end of the field
-		field += fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)
-		// Removing xs:, which is an xml standard type (string, boolean)
-		field = strings.Replace(field, "xs:", "", -1)
-		// Rename boolean to golang type bool
-		field = strings.Replace(field, "boolean", "bool", -1)
+		abc.Tag = fmt.Sprintf(" `xml:\"%s,omitempty\"`", elem.Name)
 
 		// Format the documentation for the field
 		// For the Maven XSD, the first element in a doc is the version of the pom it was added.  So we take just the second element
@@ -163,18 +151,17 @@ func (s Schema) GetTypeAsString(target ComplexType) string {
 		// Only add a documentation line if we do in fact have docs
 		if len(documentation) > 0 {
 			abc.Doc = documentation
-			field = fmt.Sprintf("%s\n%s", documentation, field)
 		}
 		myType.Fields = append(myType.Fields, abc)
-		fields = append(fields, field)
 	}
 
 	// Add a comment field to the bottom of each subtype.  This way we keep comments
-	fields = append(fields, "Comment string `xml:\",comment\"`")
 	myType.Fields = append(myType.Fields, pomTypeField{
-		Name: "Comment",
-		Type: "string",
-		Tag:  "`xml:\",comment\"`",
+		Name:      "Comment",
+		Type:      "string",
+		IsPointer: false,
+		IsSlice:   false,
+		Tag:       "`xml:\",comment\"`",
 	})
 	types = append(types, myType)
 
